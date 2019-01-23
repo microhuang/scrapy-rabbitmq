@@ -2,7 +2,7 @@ __author__ = 'roycehaynes'
 
 import scrapy_rabbitmq.connection as connection
 
-from scrapy.spider import Spider
+from scrapy.spiders import Spider
 from scrapy import signals
 from scrapy.exceptions import DontCloseSpider
 
@@ -15,6 +15,10 @@ class RabbitMQMixin(object):
 
     def __init__(self):
         self.server = None
+        
+    def start_requests(self):
+        """Returns a batch of start requests from redis."""
+        return self.next_request()
 
     def setup_rabbitmq(self):
         """ Setup RabbitMQ connection.
@@ -38,16 +42,19 @@ class RabbitMQMixin(object):
         method_frame, header_frame, url = self.server.basic_get(queue=self.rabbitmq_key)
 
         if url:
-            return self.make_requests_from_url(url)
+            req = self.make_requests_from_url(bytes_to_str(url))
+            yield req
+            #return req
 
     def schedule_next_request(self):
         """ Schedules a request, if exists.
 
         :return:
         """
-        req = self.next_request()
+#        req = self.next_request()
 
-        if req:
+#        if req:
+        for req in self.next_request():
             self.crawler.engine.crawl(req, spider=self)
 
     def spider_idle(self):
@@ -71,6 +78,25 @@ class RabbitMQSpider(RabbitMQMixin, Spider):
     """ Spider that reads urls from RabbitMQ queue when idle.
     """
 
+    request_res_route_key = ''
+    item_res_route_key = ''
+    request_res_route = None
+    item_res_route = None
+    
+    @classmethod
+    def from_crawler(self, crawler, *args, **kwargs):
+        obj = super(RabbitMQSpider, self).from_crawler(crawler, *args, **kwargs)
+        obj.setup_rabbitmq()
+        return obj
+
     def set_crawler(self, crawler):
-        super(RabbitMQSpider, self).set_crawler(crawler)
+        #super(RabbitMQSpider, self).set_crawler(crawler)
         self.setup_rabbitmq()
+
+
+import six
+def bytes_to_str(s, encoding='utf-8'):
+    """Returns a str if a bytes object is given."""
+    if six.PY3 and isinstance(s, bytes):
+        return s.decode(encoding)
+    return s
