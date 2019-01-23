@@ -38,6 +38,10 @@ class RabbitMQMixin(object):
         """ Provides a request to be scheduled.
         :return: Request object or None
         """
+        
+        if not self.server.is_open:
+            #重新打开连接
+            self.server = connection.from_settings(self.crawler.settings)
 
         method_frame, header_frame, url = self.server.basic_get(queue=self.rabbitmq_key)
 

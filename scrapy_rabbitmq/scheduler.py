@@ -25,6 +25,7 @@ class Scheduler(object):
         self.dupefilter_key = dupefilter_key
         self.idle_before_close = idle_before_close
         self.stats = None
+        self.settings = kwargs.pop('settings', None)
 
     def __len__(self):
         return len(self.queue)
@@ -37,7 +38,7 @@ class Scheduler(object):
         dupefilter_key = settings.get('DUPEFILTER_KEY', DUPEFILTER_KEY)
         idle_before_close = settings.get('SCHEDULER_IDLE_BEFORE_CLOSE', IDLE_BEFORE_CLOSE)
         server = from_settings(settings)
-        return cls(server, persist, queue_key, queue_cls, dupefilter_key, idle_before_close)
+        return cls(server, persist, queue_key, queue_cls, dupefilter_key, idle_before_close, settings=settings)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -70,6 +71,13 @@ class Scheduler(object):
 
     def next_request(self):
         block_pop_timeout = self.idle_before_close
+        
+        if not self.server.is_open and not self.settings is None:
+            #重新打开连接
+            self.server = from_settings(self.settings)
+            #重建队列
+            self.open(self.spider)
+            
         request = self.queue.pop()
         if request and self.stats:
             self.stats.inc_value('scheduler/dequeued/rabbitmq', spider=self.spider)
