@@ -94,7 +94,7 @@ class RabbitMQSpider(RabbitMQMixin, Spider):
         return obj
 
     def set_crawler(self, crawler):
-        #super(RabbitMQSpider, self).set_crawler(crawler)
+        super(RabbitMQSpider, self).set_crawler(crawler)
         self.setup_rabbitmq()
 
 
