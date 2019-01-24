@@ -60,6 +60,8 @@ def from_settings(settings):
         connection = connection_producer(pika.ConnectionParameters(**connection_parameters))
 
     channel = connection.channel()
+    channel.basic_qos(prefetch_count=1)
+    #channel.basic_ack(delivery_tag=0, multiple=False)
     channel.queue_declare(queue=queue_name, durable=True)
 
     return channel

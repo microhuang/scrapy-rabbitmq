@@ -81,11 +81,6 @@ class RabbitMQMixin(object):
 class RabbitMQSpider(RabbitMQMixin, Spider):
     """ Spider that reads urls from RabbitMQ queue when idle.
     """
-
-    request_res_route_key = ''
-    item_res_route_key = ''
-    request_res_route = None
-    item_res_route = None
     
     @classmethod
     def from_crawler(self, crawler, *args, **kwargs):
