@@ -12,9 +12,10 @@ class RabbitMQMixin(object):
     """
 
     rabbitmq_key = None
+    server = None
 
-    def __init__(self):
-        self.server = None
+#    def __init__(self):
+#        self.server = None
         
     def start_requests(self):
         """Returns a batch of start requests from redis."""
@@ -27,6 +28,13 @@ class RabbitMQMixin(object):
         :return: None
         """
 
+        if self.crawler.settings.get('RABBITMQ_QUEUE_NAME', None):
+            self.rabbitmq_key = self.crawler.settings.get('RABBITMQ_QUEUE_NAME', None)
+            self.rabbitmq_key = self.rabbitmq_key % {'name':self.name}
+            self.crawler.settings.frozen = False
+            self.crawler.settings.set('RABBITMQ_QUEUE_NAME', self.rabbitmq_key)
+            self.crawler.settings.frozen = True
+            
         if not self.rabbitmq_key:
             self.rabbitmq_key = '{}:start_urls'.format(self.name)
 
@@ -50,6 +58,10 @@ class RabbitMQMixin(object):
             yield req
             #return req
 
+    #与scrapy-redis一致
+    def schedule_next_requests(self):
+        return schedule_next_request()
+    
     def schedule_next_request(self):
         """ Schedules a request, if exists.
 
