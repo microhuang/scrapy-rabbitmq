@@ -70,7 +70,7 @@ class SpiderQueue(Base):
     def pop(self):
         """Pop a request"""
 
-        method_frame, header, body = self.server.basic_get(queue=self.key, no_ack=False)
+        method_frame, header, body = self.server.basic_get(queue=self.key, no_ack=True)
 
         if body:
             return self._decode_request(body)
