@@ -60,7 +60,7 @@ def from_settings(settings):
         connection = connection_producer(pika.ConnectionParameters(**connection_parameters))
 
     channel = connection.channel()
-    channel.basic_qos(prefetch_count=1)
+    #channel.basic_qos(prefetch_count=1)#消费者未应答数达到prefetch_count则不再投递/接受消息
     #channel.basic_ack(delivery_tag=0, multiple=False)
     channel.queue_declare(queue=queue_name, durable=True)
 
